@@ -1,2 +1,2 @@
-# funade-spresense
-spresense sdk for funade
+# spresense
+spresense sdk
