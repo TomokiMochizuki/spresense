@@ -183,20 +183,6 @@ extern const struct file_operations g_video_fops;
  * Public Function Prototypes
  ****************************************************************************/
 
- /* Get the connected imgsensor ops from video driver.
-  *
-  *  param [in] sensors: provide imgsensor ops array
-  *  param [in] sensor_num: the number of imgsensor ops array
-  *
-  *  Return on success, imgsensor ops is returned.
-  *  On failure, NULL is returned.
-  */
-FAR struct imgsensor_s *
-get_connected_imgsensor(FAR struct imgsensor_s **sensors,
-                        size_t sensor_num);
-
-// The following APIs are used to get imgdata and imgsensor ops
-
 /* Get imgdata ops from video driver.
  *
  *  Return on success, imgdata ops is returned.

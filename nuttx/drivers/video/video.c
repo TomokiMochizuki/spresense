@@ -884,7 +884,7 @@ static bool is_sem_waited(FAR sem_t *sem)
   return nxsem_get_value(sem, &semcount) == OK && semcount < 0;
 }
 
-FAR struct imgsensor_s *
+static FAR struct imgsensor_s *
 get_connected_imgsensor(FAR struct imgsensor_s **sensors,
                         size_t sensor_num)
 {
