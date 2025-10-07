@@ -3533,3 +3533,18 @@ void imgdata_register(FAR struct imgdata_s *data)
 {
   g_video_data = data;
 }
+
+FAR struct imgdata_s *video_get_imgdata(void)
+{
+  return g_video_data;
+}
+
+FAR struct imgsensor_s **video_get_registered_sensor(void)
+{
+  return g_video_registered_sensor;
+}
+
+size_t video_get_sensor_num(void)
+{
+  return g_video_registered_sensor_num;
+}
