@@ -265,6 +265,8 @@ static int isx012_get_value(FAR struct imgsensor_s *sensor,
              uint32_t id, uint32_t size, FAR imgsensor_value_t *value);
 static int isx012_set_value(FAR struct imgsensor_s *sensor,
              uint32_t id, uint32_t size, imgsensor_value_t value);
+static int isx012_power_on(FAR struct imgsensor_s *sensor);
+static int isx012_power_off(FAR struct imgsensor_s *sensor);
 
 /****************************************************************************
  * Private Data
@@ -656,7 +658,9 @@ static const struct imgsensor_ops_s g_isx012_ops =
   NULL,                                 /* get_frame_interval */
   isx012_get_supported_value,           /* get_supported_value */
   isx012_get_value,                     /* get_value */
-  isx012_set_value                      /* set_value */
+  isx012_set_value,                     /* set_value */
+  isx012_power_on,                      /* power_on */
+  isx012_power_off,                     /* power_off */
 };
 
 static isx012_dev_t g_isx012_private =
@@ -3114,6 +3118,20 @@ static int isx012_set_value(FAR struct imgsensor_s *sensor,
     }
 
   return ret;
+}
+
+static int isx012_power_on(FAR struct imgsensor_s *sensor)
+{
+  (void)sensor;
+
+  return board_isx012_power_on();
+}
+
+static int isx012_power_off(FAR struct imgsensor_s *sensor)
+{
+  (void)sensor;
+
+  return board_isx012_power_off();
 }
 
 static int isx012_set_shd(FAR isx012_dev_t *priv)

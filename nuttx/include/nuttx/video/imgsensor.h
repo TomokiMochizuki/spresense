@@ -151,6 +151,10 @@
   ((s)->ops->get_value ? (s)->ops->get_value(s, i, l, v) : -ENOTTY)
 #define IMGSENSOR_SET_VALUE(s, i, l, v) \
   ((s)->ops->set_value ? (s)->ops->set_value(s, i, l, v) : -ENOTTY)
+#define IMGSENSOR_POWER_ON(s) \
+  ((s)->ops->power_on ? (s)->ops->power_on(s) : -ENOTTY)
+#define IMGSENSOR_POWER_OFF(s) \
+  ((s)->ops->power_off ? (s)->ops->power_off(s) : -ENOTTY)
 
 /****************************************************************************
  * Public Types
@@ -383,6 +387,8 @@ struct imgsensor_ops_s
   CODE int  (*set_value)(FAR struct imgsensor_s *sensor,
                          uint32_t id, uint32_t size,
                          imgsensor_value_t value);
+  CODE int (*power_on)(FAR struct imgsensor_s *sensor);
+  CODE int (*power_off)(FAR struct imgsensor_s *sensor);
 };
 
 /* Image sensor private data.  This structure only defines the initial fields
