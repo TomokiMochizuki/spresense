@@ -1279,29 +1279,6 @@ int video_unregister(FAR const char *devpath);
  */
 int video_check_devpath_size(FAR const char *devpath, FAR struct imgdata_s *data);
 
-// The following APIs are used to get imgdata and imgsensor ops
-
-/* Get imgdata ops from video driver.
- *
- *  Return on success, imgdata ops is returned.
- *  On failure, NULL is returned.
- */
-FAR struct imgdata_s *video_get_imgdata(void);
-
-/* Get imgsensor ops from video driver.
- *
- *  Return on success, imgsensor ops is returned.
- *  On failure, NULL is returned.
- */
-FAR struct imgsensor_s **video_get_imgsensors(void);
-
-/* Get the number of imgsensor ops array from video driver.
- *
- *  Return on success, the number of imgsensor ops array is returned.
- *  On failure, 0 is returned.
- */
-size_t video_get_sensor_num(void);
-
 #ifdef __cplusplus
 }
 #endif

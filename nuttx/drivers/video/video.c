@@ -154,7 +154,7 @@ static int video_s_ext_ctrls_scene(FAR video_mng_t *vmng,
  * Private Data
  ****************************************************************************/
 
-static const struct file_operations g_video_fops =
+const struct file_operations g_video_fops =
 {
   video_open,               /* open */
   video_close,              /* close */
@@ -884,7 +884,7 @@ static bool is_sem_waited(FAR sem_t *sem)
   return nxsem_get_value(sem, &semcount) == OK && semcount < 0;
 }
 
-static FAR struct imgsensor_s *
+FAR struct imgsensor_s *
 get_connected_imgsensor(FAR struct imgsensor_s **sensors,
                         size_t sensor_num)
 {

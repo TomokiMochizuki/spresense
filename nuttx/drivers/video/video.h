@@ -177,4 +177,45 @@ struct video_mng_s
 
 typedef struct video_mng_s video_mng_t;
 
+extern const struct file_operations g_video_fops;
+
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
+
+ /* Get the connected imgsensor ops from video driver.
+  *
+  *  param [in] sensors: provide imgsensor ops array
+  *  param [in] sensor_num: the number of imgsensor ops array
+  *
+  *  Return on success, imgsensor ops is returned.
+  *  On failure, NULL is returned.
+  */
+FAR struct imgsensor_s *
+get_connected_imgsensor(FAR struct imgsensor_s **sensors,
+                        size_t sensor_num);
+
+// The following APIs are used to get imgdata and imgsensor ops
+
+/* Get imgdata ops from video driver.
+ *
+ *  Return on success, imgdata ops is returned.
+ *  On failure, NULL is returned.
+ */
+FAR struct imgdata_s *video_get_imgdata(void);
+
+/* Get imgsensor ops from video driver.
+ *
+ *  Return on success, imgsensor ops is returned.
+ *  On failure, NULL is returned.
+ */
+FAR struct imgsensor_s **video_get_imgsensors(void);
+
+/* Get the number of imgsensor ops array from video driver.
+ *
+ *  Return on success, the number of imgsensor ops array is returned.
+ *  On failure, 0 is returned.
+ */
+size_t video_get_sensor_num(void);
+
 #endif /* __DRIVERS_VIDEO_VIDEO_H */
