@@ -714,8 +714,8 @@ static int fpga_i2c_write(FAR isx019_dev_t *priv, uint8_t addr,
   return ret;
 }
 
-static int fpga_i2c_read(FAR isx019_dev_t *priv, uint8_t addr,
-                         FAR void *data, uint8_t size)
+int fpga_i2c_read(FAR isx019_dev_t *priv, uint8_t addr,
+                  FAR void *data, uint8_t size)
 {
   int ret;
 
@@ -922,11 +922,11 @@ static int send_read_cmd(FAR isx019_dev_t *priv,
   return ret;
 }
 
-static int isx019_i2c_read(FAR isx019_dev_t *priv,
-                           uint8_t cat,
-                           uint16_t addr,
-                           FAR void *data,
-                           uint8_t size)
+int isx019_i2c_read(FAR isx019_dev_t *priv,
+                    uint8_t cat,
+                    uint16_t addr,
+                    FAR void *data,
+                    uint8_t size)
 {
   int ret;
 
@@ -983,8 +983,8 @@ static int set_drive_mode(FAR isx019_dev_t *priv)
   return OK;
 }
 
-bool try_repeat(int sec, int usec, FAR isx019_dev_t *priv,
-                CODE int (*trial_func)(FAR isx019_dev_t *))
+static bool try_repeat(int sec, int usec, FAR isx019_dev_t *priv,
+                       CODE int (*trial_func)(FAR isx019_dev_t *))
 {
   int ret;
   struct timespec start;

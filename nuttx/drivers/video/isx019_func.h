@@ -287,9 +287,12 @@ typedef struct isx019_fpga_jpg_quality_s isx019_fpga_jpg_quality_t;
  * Public Function Prototypes
  ****************************************************************************/
 /* Retry mechanism for I2C communication */
-bool try_repeat(int sec, int usec, FAR isx019_dev_t *priv,
-                CODE int (*trial_func)(FAR isx019_dev_t *));
-int try_isx019_i2c(FAR isx019_dev_t *priv);
-int try_fpga_i2c(FAR isx019_dev_t *priv);
+int isx019_i2c_read(FAR isx019_dev_t *priv,
+                    uint8_t cat,
+                    uint16_t addr,
+                    FAR void *data,
+                    uint8_t size);
+int fpga_i2c_read(FAR isx019_dev_t *priv, uint8_t addr,
+                  FAR void *data, uint8_t size);
 
 #endif /* __DRIVERS_VIDEO_ISX019_FUNC_H */
