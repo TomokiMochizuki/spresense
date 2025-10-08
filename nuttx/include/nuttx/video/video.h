@@ -1269,6 +1269,16 @@ int video_register(FAR const char *devpath,
 
 int video_unregister(FAR const char *devpath);
 
+/* Check the length of devpath.
+ *
+ *  param [in] devpath: path to video device
+ *  param [in] data: provide imgdata ops
+ *
+ *  Return on success, 0 is returned. On failure,
+ *  negative value is returned.
+ */
+int video_check_devpath_size(FAR const char *devpath, FAR struct imgdata_s *data);
+
 #ifdef __cplusplus
 }
 #endif
