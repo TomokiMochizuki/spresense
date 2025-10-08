@@ -110,8 +110,21 @@ int board_isx019_power_off(void)
 
   /* Need to wait for power-off to be reflected */
 
-  nxsig_usleep(POWER_OFF_TIME);
+  // nxsig_usleep(POWER_OFF_TIME);
 
+  return ret;
+}
+
+int board_isx019_confirm_power_off(void)
+{
+  int ret;
+  int i;
+
+  if (board_power_monitor(POWER_IMAGE_SENSOR))
+    {
+      return -EIO;
+    }
+  
   ret = -ETIMEDOUT;
   for (i = 0; i < POWER_CHECK_RETRY; i++)
     {

@@ -73,6 +73,16 @@ int board_isx019_power_on(void);
 int board_isx019_power_off(void);
 
 /****************************************************************************
+ * Name: board_isx019_confirm_power_off
+ *
+ * Description:
+ *   Confirm that ISX019 power is off
+ *
+ ****************************************************************************/
+
+int board_isx019_confirm_power_off(void);
+
+/****************************************************************************
  * Name: board_isx019_set_reset
  *
  * Description:

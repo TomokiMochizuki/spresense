@@ -41,6 +41,9 @@
 #include "isx019_reg.h"
 #include "isx019_range.h"
 
+#define POWER_CHECK_TIME            (1 * USEC_PER_MSEC)   /* ms */
+#define POWER_OFF_TIME              (50 * USEC_PER_MSEC)  /* ms */
+
 /****************************************************************************
  * Private Function Prototypes
  ****************************************************************************/
@@ -1053,7 +1056,6 @@ static int power_off(FAR struct imgsensor_s *sensor)
   FAR isx019_dev_t *priv = (FAR isx019_dev_t *)sensor;
   board_isx019_set_reset();
   int ret = board_isx019_power_off();
-  board_isx019_uninitialize(priv->i2c);
   return ret;
 }
 
@@ -1082,6 +1084,8 @@ static bool isx019_is_available(FAR struct imgsensor_s *sensor)
     }
 
   power_off(sensor);
+  nxsig_usleep(POWER_OFF_TIME);
+  isx019_uninit(sensor);
 
   return ret;
 }
@@ -1151,8 +1155,10 @@ static int isx019_init(FAR struct imgsensor_s *sensor)
 
 static int isx019_uninit(FAR struct imgsensor_s *sensor)
 {
-  power_off(sensor);
-  return OK;
+  FAR isx019_dev_t *priv = (FAR isx019_dev_t *)sensor;
+  int ret = board_isx019_confirm_power_off();
+  board_isx019_uninitialize(priv->i2c);
+  return ret;
 }
 
 static FAR const char *isx019_get_driver_name(FAR struct imgsensor_s *sensor)
