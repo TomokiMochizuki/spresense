@@ -44,6 +44,8 @@
 #define POWER_CHECK_TIME            (1 * USEC_PER_MSEC)   /* ms */
 #define POWER_OFF_TIME              (50 * USEC_PER_MSEC)  /* ms */
 
+#define POWER_CHECK_RETRY           (10)
+
 /****************************************************************************
  * Private Function Prototypes
  ****************************************************************************/
@@ -85,6 +87,7 @@ static int send_read_cmd(FAR isx019_dev_t *priv,
                          uint16_t addr,
                          uint8_t size);
 static int power_on(FAR struct imgsensor_s *sensor);
+static int confirm_power_on(FAR struct imgsensor_s *sensor);
 static int power_off(FAR struct imgsensor_s *sensor);
 
 /****************************************************************************
@@ -106,6 +109,7 @@ static const struct imgsensor_ops_s g_isx019_ops =
   isx019_set_value,
   power_on,
   power_off,
+  confirm_power_on,
 };
 
 static isx019_dev_t g_isx019_private =
@@ -1047,7 +1051,18 @@ static int power_on(FAR struct imgsensor_s *sensor)
   priv->i2c_cfg.frequency = ISX019_I2C_FREQUENCY;
   priv->i2c_cfg.addrlen   = ISX019_I2C_SLVADDR_LEN;
   int ret = board_isx019_power_on();
-  board_isx019_release_reset();
+  return ret;
+}
+
+static int confirm_power_on(FAR struct imgsensor_s *sensor)
+{
+  (void)sensor;
+
+  int ret = board_isx019_confirm_power_on();
+  if (ret == OK)
+    {
+      board_isx019_release_reset();
+    }
   return ret;
 }
 
@@ -1063,8 +1078,20 @@ static bool isx019_is_available(FAR struct imgsensor_s *sensor)
 {
   FAR isx019_dev_t *priv = (FAR isx019_dev_t *)sensor;
   bool ret;
+  int res;
 
   power_on(sensor);
+
+  res = -ETIMEDOUT;
+  for (int i = 0; i < POWER_CHECK_RETRY; i++)
+    {
+      nxsig_usleep(POWER_CHECK_TIME);
+      
+      if (confirm_power_on(sensor) == OK)
+        {
+          break;
+        }
+    }
 
   /* Try to access via I2C
    * about both ISX019 image sensor and FPGA.
@@ -1129,6 +1156,7 @@ static int isx019_init(FAR struct imgsensor_s *sensor)
   uint32_t clk;
 
   power_on(sensor);
+  confirm_power_on(sensor);
   set_drive_mode(priv);
   fpga_init(priv);
   initialize_wbmode(priv);

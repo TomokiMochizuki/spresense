@@ -63,6 +63,16 @@ extern "C"
 int board_isx019_power_on(void);
 
 /****************************************************************************
+ * Name: board_isx019_confirm_power_on
+ *
+ * Description:
+ *   Confirm that ISX019 power is on
+ *
+ ****************************************************************************/
+
+int board_isx019_confirm_power_on(void);
+
+/****************************************************************************
  * Name: board_isx019_power_off
  *
  * Description:
