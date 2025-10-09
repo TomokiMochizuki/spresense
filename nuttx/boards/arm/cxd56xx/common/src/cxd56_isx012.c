@@ -75,7 +75,6 @@ static struct pm_cpu_freqlock_s g_hv_lock =
 int board_isx012_power_on(void)
 {
   int ret;
-  int i;
 
   ret = board_power_control(POWER_IMAGE_SENSOR, true);
   if (ret)
@@ -83,19 +82,17 @@ int board_isx012_power_on(void)
       _err("ERROR: Failed to power on ImageSensor. %d\n", ret);
       return -ENODEV;
     }
+  return ret;
+}
+
+int board_isx012_confirm_power_on(void)
+{
+  int ret;
 
   ret = -ETIMEDOUT;
-  for (i = 0; i < POWER_CHECK_RETRY; i++)
+  if (true == board_power_monitor(POWER_IMAGE_SENSOR))
     {
-      /* Need to wait for a while after power-on */
-
-      nxsig_usleep(POWER_CHECK_TIME);
-
-      if (true == board_power_monitor(POWER_IMAGE_SENSOR))
-        {
-          ret = OK;
-          break;
-        }
+      ret = OK;
     }
 
   return ret;

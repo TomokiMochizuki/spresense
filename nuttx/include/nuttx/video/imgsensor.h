@@ -155,6 +155,8 @@
   ((s)->ops->power_on ? (s)->ops->power_on(s) : -ENOTTY)
 #define IMGSENSOR_POWER_OFF(s) \
   ((s)->ops->power_off ? (s)->ops->power_off(s) : -ENOTTY)
+#define IMGSENSOR_CONFIRM_POWER_ON(s) \
+  ((s)->ops->confirm_power_on ? (s)->ops->confirm_power_on(s) : -ENOTTY)
 
 /****************************************************************************
  * Public Types
@@ -389,6 +391,7 @@ struct imgsensor_ops_s
                          imgsensor_value_t value);
   CODE int (*power_on)(FAR struct imgsensor_s *sensor);
   CODE int (*power_off)(FAR struct imgsensor_s *sensor);
+  CODE int (*confirm_power_on)(FAR struct imgsensor_s *sensor);
 };
 
 /* Image sensor private data.  This structure only defines the initial fields

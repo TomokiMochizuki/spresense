@@ -157,6 +157,10 @@
 #define ISX012_SPOT_POSITION_SPLIT_NUM_X (9)
 #define ISX012_SPOT_POSITION_SPLIT_NUM_Y (7)
 
+#define POWER_CHECK_TIME            (1 * 1000)   /* ms */
+
+#define POWER_CHECK_RETRY           (10)
+
 /****************************************************************************
  * Private Types
  ****************************************************************************/
@@ -661,6 +665,7 @@ static const struct imgsensor_ops_s g_isx012_ops =
   isx012_set_value,                     /* set_value */
   isx012_power_on,                      /* power_on */
   isx012_power_off,                     /* power_off */
+  isx012_confirm_power_on,              /* confirm_power_on */
 };
 
 static isx012_dev_t g_isx012_private =
@@ -1432,6 +1437,7 @@ static int isx012_init(FAR struct imgsensor_s *sensor)
 {
   FAR isx012_dev_t *priv = (FAR isx012_dev_t *)sensor;
   int ret = 0;
+  int i;
 
   priv->i2c               = board_isx012_initialize();
   priv->i2c_cfg.address   = ISX012_I2C_SLV_ADDR;
@@ -1442,6 +1448,26 @@ static int isx012_init(FAR struct imgsensor_s *sensor)
   if (ret < 0)
     {
       verr("Failed to power on %d\n", ret);
+      return ret;
+    }
+
+  ret = -ETIMEDOUT;
+  for (i = 0; i < POWER_CHECK_RETRY; i++)
+    {
+      /* Need to wait for a while after power-on */
+
+      nxsig_usleep(POWER_CHECK_TIME);
+
+      if (board_isx012_confirm_power_on() == OK)
+        {
+          ret = OK;
+          break;
+        }
+    }
+
+  if (ret < 0)
+    {
+      verr("Failed to confirm power on %d\n", ret);
       return ret;
     }
 
@@ -3125,6 +3151,13 @@ static int isx012_power_on(FAR struct imgsensor_s *sensor)
   (void)sensor;
 
   return board_isx012_power_on();
+}
+
+static int isx012_confirm_power_on(FAR struct imgsensor_s *sensor)
+{
+  (void)sensor;
+
+  return board_isx012_confirm_power_on();
 }
 
 static int isx012_power_off(FAR struct imgsensor_s *sensor)
