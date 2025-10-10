@@ -965,7 +965,7 @@ void isx019_fpga_init(FAR isx019_dev_t *priv)
   fpga_activate_setting(priv);
 }
 
-static int isx019_set_drive_mode(FAR isx019_dev_t *priv)
+static int set_drive_mode(FAR isx019_dev_t *priv)
 {
   uint8_t drv[] =
     {
@@ -1153,7 +1153,7 @@ static int isx019_init(FAR struct imgsensor_s *sensor)
 
   power_on(sensor);
   confirm_power_on(sensor);
-  isx019_set_drive_mode(priv);
+  set_drive_mode(priv);
   isx019_fpga_init(priv);
   isx019_initialize_wbmode(priv);
   isx019_initialize_jpg_quality(priv);
