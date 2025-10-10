@@ -79,6 +79,7 @@ static int isx019_get_value(FAR struct imgsensor_s *sensor,
 static int isx019_set_value(FAR struct imgsensor_s *sensor,
                             uint32_t id, uint32_t size,
                             imgsensor_value_t value);
+static void initialize_wbmode(FAR isx019_dev_t *priv);
 static int send_read_cmd(FAR isx019_dev_t *priv,
                          FAR const struct i2c_config_s *config,
                          uint8_t cat,
@@ -1155,7 +1156,7 @@ static int isx019_init(FAR struct imgsensor_s *sensor)
   confirm_power_on(sensor);
   set_drive_mode(priv);
   fpga_init(priv);
-  isx019_initialize_wbmode(priv);
+  initialize_wbmode(priv);
   isx019_initialize_jpg_quality(priv);
 
   /* Set initial gamma value for getting current value API. */
@@ -2126,7 +2127,7 @@ static int set_awb_hold(FAR isx019_dev_t *priv)
   return isx019_i2c_write(priv, CAT_CATAWB, AWBMODE, &mode, 1);
 }
 
-void isx019_initialize_wbmode(FAR isx019_dev_t *priv)
+static void initialize_wbmode(FAR isx019_dev_t *priv)
 {
   priv->wb_mode = IMGSENSOR_WHITE_BALANCE_AUTO;
 }

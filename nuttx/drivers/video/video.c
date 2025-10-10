@@ -797,7 +797,7 @@ static void initialize_scenes_parameter(FAR video_mng_t *vmng)
 #endif /* CONFIG_VIDEO_SCENE_TEXT */
 }
 
-static void initialize_resources(FAR video_mng_t *vmng)
+void initialize_resources(FAR video_mng_t *vmng)
 {
   initialize_streamresources(&vmng->video_inf);
   initialize_streamresources(&vmng->still_inf);
@@ -910,7 +910,7 @@ static int video_open(FAR struct file *filep)
   FAR video_mng_t  *priv  = inode->i_private;
   int ret = OK;
 
-  nxmutex_lock(&priv->lock_open_num);
+  // nxmutex_lock(&priv->lock_open_num);
   if (priv->open_num == 0)
     {
       /* Only in first execution, open device */
