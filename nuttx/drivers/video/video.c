@@ -918,7 +918,7 @@ static int video_open(FAR struct file *filep)
       ret = IMGSENSOR_INIT(priv->imgsensor);
       if (ret == OK)
         {
-          ret = OK;
+          ret = IMGDATA_INIT(priv->imgdata);
           if (ret == OK)
             {
               initialize_resources(priv);
