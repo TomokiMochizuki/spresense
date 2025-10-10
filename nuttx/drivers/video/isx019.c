@@ -697,8 +697,8 @@ static const int32_t g_isx019_ae[] =
  * Private Functions
  ****************************************************************************/
 
-static int fpga_i2c_write(FAR isx019_dev_t *priv, uint8_t addr,
-                          FAR const void *data, uint8_t size)
+int fpga_i2c_write(FAR isx019_dev_t *priv, uint8_t addr,
+                   FAR const void *data, uint8_t size)
 {
   static uint8_t buf[FPGA_I2C_REGSIZE_MAX + FPGA_I2C_REGADDR_LEN];
   int ret;
@@ -873,11 +873,11 @@ static int send_write_cmd(FAR isx019_dev_t *priv,
   return i2c_write(priv->i2c, config, buf, len);
 }
 
-static int isx019_i2c_write(FAR isx019_dev_t *priv,
-                            uint8_t cat,
-                            uint16_t addr,
-                            FAR const void *data,
-                            uint8_t size)
+int isx019_i2c_write(FAR isx019_dev_t *priv,
+                     uint8_t cat,
+                     uint16_t addr,
+                     FAR const void *data,
+                     uint8_t size)
 {
   int ret;
 
@@ -955,17 +955,29 @@ void isx019_fpga_init(FAR isx019_dev_t *priv)
 {
   uint8_t regval;
 
+  printf("DEBUG: isx019_fpga_init: Entry\n");
   regval = FPGA_RESET_ENABLE;
+  printf("DEBUG: isx019_fpga_init: Writing FPGA_RESET_ENABLE\n");
   fpga_i2c_write(priv, FPGA_RESET, &regval, 1);
+  printf("DEBUG: isx019_fpga_init: FPGA_RESET_ENABLE done\n");
   regval = FPGA_DATA_OUTPUT_STOP;
+  printf("DEBUG: isx019_fpga_init: Writing FPGA_DATA_OUTPUT_STOP\n");
   fpga_i2c_write(priv, FPGA_DATA_OUTPUT, &regval, 1);
+  printf("DEBUG: isx019_fpga_init: FPGA_DATA_OUTPUT_STOP done\n");
+  printf("DEBUG: isx019_fpga_init: Calling fpga_activate_setting (1)\n");
   fpga_activate_setting(priv);
+  printf("DEBUG: isx019_fpga_init: fpga_activate_setting (1) done\n");
   regval = FPGA_RESET_RELEASE;
+  printf("DEBUG: isx019_fpga_init: Writing FPGA_RESET_RELEASE\n");
   fpga_i2c_write(priv, FPGA_RESET, &regval, 1);
+  printf("DEBUG: isx019_fpga_init: FPGA_RESET_RELEASE done\n");
+  printf("DEBUG: isx019_fpga_init: Calling fpga_activate_setting (2)\n");
   fpga_activate_setting(priv);
+  printf("DEBUG: isx019_fpga_init: fpga_activate_setting (2) done\n");
+  printf("DEBUG: isx019_fpga_init: Exit\n");
 }
 
-int isx019_set_drive_mode(FAR isx019_dev_t *priv)
+static int isx019_set_drive_mode(FAR isx019_dev_t *priv)
 {
   uint8_t drv[] =
     {
