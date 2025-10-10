@@ -1088,11 +1088,9 @@ static bool isx019_is_available(FAR struct imgsensor_s *sensor)
 {
   FAR isx019_dev_t *priv = (FAR isx019_dev_t *)sensor;
   bool ret;
-  int res;
 
   power_on(sensor);
 
-  res = -ETIMEDOUT;
   for (int i = 0; i < POWER_CHECK_RETRY; i++)
     {
       nxsig_usleep(POWER_CHECK_TIME);
