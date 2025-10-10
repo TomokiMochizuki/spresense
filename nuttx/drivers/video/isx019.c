@@ -79,8 +79,6 @@ static int isx019_get_value(FAR struct imgsensor_s *sensor,
 static int isx019_set_value(FAR struct imgsensor_s *sensor,
                             uint32_t id, uint32_t size,
                             imgsensor_value_t value);
-static int initialize_jpg_quality(FAR isx019_dev_t *priv);
-static void initialize_wbmode(FAR isx019_dev_t *priv);
 static int send_read_cmd(FAR isx019_dev_t *priv,
                          FAR const struct i2c_config_s *config,
                          uint8_t cat,
@@ -953,7 +951,7 @@ int isx019_i2c_read(FAR isx019_dev_t *priv,
   return ret;
 }
 
-static void fpga_init(FAR isx019_dev_t *priv)
+void isx019_fpga_init(FAR isx019_dev_t *priv)
 {
   uint8_t regval;
 
@@ -967,7 +965,7 @@ static void fpga_init(FAR isx019_dev_t *priv)
   fpga_activate_setting(priv);
 }
 
-static int set_drive_mode(FAR isx019_dev_t *priv)
+int isx019_set_drive_mode(FAR isx019_dev_t *priv)
 {
   uint8_t drv[] =
     {
@@ -1124,7 +1122,7 @@ static int32_t get_value32(FAR isx019_dev_t *priv, uint32_t id)
   return val.value32;
 }
 
-static void store_default_value(FAR isx019_dev_t *priv)
+void isx019_store_default_value(FAR isx019_dev_t *priv)
 {
   FAR isx019_default_value_t *def = &priv->default_value;
 
@@ -1157,10 +1155,10 @@ static int isx019_init(FAR struct imgsensor_s *sensor)
 
   power_on(sensor);
   confirm_power_on(sensor);
-  set_drive_mode(priv);
-  fpga_init(priv);
-  initialize_wbmode(priv);
-  initialize_jpg_quality(priv);
+  isx019_set_drive_mode(priv);
+  isx019_fpga_init(priv);
+  isx019_initialize_wbmode(priv);
+  isx019_initialize_jpg_quality(priv);
 
   /* Set initial gamma value for getting current value API. */
 
@@ -1172,7 +1170,7 @@ static int isx019_init(FAR struct imgsensor_s *sensor)
 
   clk = board_isx019_get_master_clock();
   priv->clock_ratio = (float)clk / ISX019_STANDARD_MASTER_CLOCK;
-  store_default_value(priv);
+  isx019_store_default_value(priv);
 
   /* Store initial HUE value for getting current value API. */
 
@@ -2130,7 +2128,7 @@ static int set_awb_hold(FAR isx019_dev_t *priv)
   return isx019_i2c_write(priv, CAT_CATAWB, AWBMODE, &mode, 1);
 }
 
-static void initialize_wbmode(FAR isx019_dev_t *priv)
+void isx019_initialize_wbmode(FAR isx019_dev_t *priv)
 {
   priv->wb_mode = IMGSENSOR_WHITE_BALANCE_AUTO;
 }
@@ -2743,7 +2741,7 @@ static int set_jpg_quality(FAR isx019_dev_t *priv,
   return OK;
 }
 
-static int initialize_jpg_quality(FAR isx019_dev_t *priv)
+int isx019_initialize_jpg_quality(FAR isx019_dev_t *priv)
 {
   imgsensor_value_t val;
 

@@ -295,4 +295,11 @@ int isx019_i2c_read(FAR isx019_dev_t *priv,
 int fpga_i2c_read(FAR isx019_dev_t *priv, uint8_t addr,
                   FAR void *data, uint8_t size);
 
+/* Split initialization functions for isx019_init() */
+int isx019_set_drive_mode(FAR isx019_dev_t *priv);
+void isx019_fpga_init(FAR isx019_dev_t *priv);
+void isx019_initialize_wbmode(FAR isx019_dev_t *priv);
+int isx019_initialize_jpg_quality(FAR isx019_dev_t *priv);
+void isx019_store_default_value(FAR isx019_dev_t *priv);
+
 #endif /* __DRIVERS_VIDEO_ISX019_FUNC_H */
