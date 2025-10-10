@@ -951,7 +951,7 @@ int isx019_i2c_read(FAR isx019_dev_t *priv,
   return ret;
 }
 
-void isx019_fpga_init(FAR isx019_dev_t *priv)
+static void fpga_init(FAR isx019_dev_t *priv)
 {
   uint8_t regval;
 
@@ -1154,7 +1154,7 @@ static int isx019_init(FAR struct imgsensor_s *sensor)
   power_on(sensor);
   confirm_power_on(sensor);
   set_drive_mode(priv);
-  isx019_fpga_init(priv);
+  fpga_init(priv);
   isx019_initialize_wbmode(priv);
   isx019_initialize_jpg_quality(priv);
 
