@@ -910,16 +910,15 @@ static int video_open(FAR struct file *filep)
   FAR video_mng_t  *priv  = inode->i_private;
   int ret = OK;
 
-  // nxmutex_lock(&priv->lock_open_num);
+  nxmutex_lock(&priv->lock_open_num);
   if (priv->open_num == 0)
     {
       /* Only in first execution, open device */
 
-      // ret = IMGSENSOR_INIT(priv->imgsensor);
-      ret = OK;
+      ret = IMGSENSOR_INIT(priv->imgsensor);
       if (ret == OK)
         {
-          ret = IMGDATA_INIT(priv->imgdata);
+          ret = OK;
           if (ret == OK)
             {
               initialize_resources(priv);
