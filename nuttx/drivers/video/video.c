@@ -915,7 +915,8 @@ static int video_open(FAR struct file *filep)
     {
       /* Only in first execution, open device */
 
-      ret = IMGSENSOR_INIT(priv->imgsensor);
+      // ret = IMGSENSOR_INIT(priv->imgsensor);
+      ret = OK;
       if (ret == OK)
         {
           ret = IMGDATA_INIT(priv->imgdata);
