@@ -797,7 +797,7 @@ static void initialize_scenes_parameter(FAR video_mng_t *vmng)
 #endif /* CONFIG_VIDEO_SCENE_TEXT */
 }
 
-void initialize_resources(FAR video_mng_t *vmng)
+void video_initialize_resources(FAR video_mng_t *vmng)
 {
   initialize_streamresources(&vmng->video_inf);
   initialize_streamresources(&vmng->still_inf);
@@ -921,7 +921,7 @@ static int video_open(FAR struct file *filep)
           ret = IMGDATA_INIT(priv->imgdata);
           if (ret == OK)
             {
-              initialize_resources(priv);
+              video_initialize_resources(priv);
             }
         }
       else

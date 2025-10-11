@@ -208,6 +208,6 @@ size_t video_get_sensor_num(void);
  *
  *  This function initializes video resources.
  */
-void initialize_resources(FAR video_mng_t *vmng);
+void video_initialize_resources(FAR video_mng_t *vmng);
 
 #endif /* __DRIVERS_VIDEO_VIDEO_H */
