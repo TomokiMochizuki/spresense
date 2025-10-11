@@ -204,4 +204,10 @@ FAR struct imgsensor_s **video_get_imgsensors(void);
  */
 size_t video_get_sensor_num(void);
 
+/* Initialize video resources
+ *
+ *  This function initializes video resources.
+ */
+void video_initialize_resources(FAR video_mng_t *vmng);
+
 #endif /* __DRIVERS_VIDEO_VIDEO_H */

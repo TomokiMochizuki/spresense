@@ -39,8 +39,6 @@
 #include <math.h>
 #include <nuttx/mutex.h>
 
-#include <nuttx/video/imgsensor.h>
-
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -294,5 +292,24 @@ int isx019_i2c_read(FAR isx019_dev_t *priv,
                     uint8_t size);
 int fpga_i2c_read(FAR isx019_dev_t *priv, uint8_t addr,
                   FAR void *data, uint8_t size);
+int isx019_i2c_write(FAR isx019_dev_t *priv,
+                      uint8_t cat,
+                      uint16_t addr,
+                      FAR const void *data,
+                      uint8_t size);
+int fpga_i2c_write(FAR isx019_dev_t *priv, uint8_t addr,
+                   FAR const void *data, uint8_t size);
+
+/* Split initialization functions for isx019_init() */
+int isx019_initialize_jpg_quality(FAR isx019_dev_t *priv);
+void isx019_store_default_value(FAR isx019_dev_t *priv);
+
+/* DQT (JPEG quality) related functions */
+void isx019_search_dqt_data(int32_t quality,
+                            FAR const uint8_t **y_head,
+                            FAR const uint8_t **y_calc,
+                            FAR const uint8_t **c_head,
+                            FAR const uint8_t **c_calc);
+int32_t isx019_get_initial_jpeg_quality(void);
 
 #endif /* __DRIVERS_VIDEO_ISX019_FUNC_H */

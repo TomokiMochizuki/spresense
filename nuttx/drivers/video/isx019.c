@@ -79,7 +79,6 @@ static int isx019_get_value(FAR struct imgsensor_s *sensor,
 static int isx019_set_value(FAR struct imgsensor_s *sensor,
                             uint32_t id, uint32_t size,
                             imgsensor_value_t value);
-static int initialize_jpg_quality(FAR isx019_dev_t *priv);
 static void initialize_wbmode(FAR isx019_dev_t *priv);
 static int send_read_cmd(FAR isx019_dev_t *priv,
                          FAR const struct i2c_config_s *config,
@@ -699,8 +698,8 @@ static const int32_t g_isx019_ae[] =
  * Private Functions
  ****************************************************************************/
 
-static int fpga_i2c_write(FAR isx019_dev_t *priv, uint8_t addr,
-                          FAR const void *data, uint8_t size)
+int fpga_i2c_write(FAR isx019_dev_t *priv, uint8_t addr,
+                   FAR const void *data, uint8_t size)
 {
   static uint8_t buf[FPGA_I2C_REGSIZE_MAX + FPGA_I2C_REGADDR_LEN];
   int ret;
@@ -875,11 +874,11 @@ static int send_write_cmd(FAR isx019_dev_t *priv,
   return i2c_write(priv->i2c, config, buf, len);
 }
 
-static int isx019_i2c_write(FAR isx019_dev_t *priv,
-                            uint8_t cat,
-                            uint16_t addr,
-                            FAR const void *data,
-                            uint8_t size)
+int isx019_i2c_write(FAR isx019_dev_t *priv,
+                     uint8_t cat,
+                     uint16_t addr,
+                     FAR const void *data,
+                     uint8_t size)
 {
   int ret;
 
@@ -1068,7 +1067,7 @@ static int confirm_power_on(FAR struct imgsensor_s *sensor)
 
 static int power_off(FAR struct imgsensor_s *sensor)
 {
-  FAR isx019_dev_t *priv = (FAR isx019_dev_t *)sensor;
+  (void*)sensor;
   board_isx019_set_reset();
   int ret = board_isx019_power_off();
   return ret;
@@ -1078,11 +1077,9 @@ static bool isx019_is_available(FAR struct imgsensor_s *sensor)
 {
   FAR isx019_dev_t *priv = (FAR isx019_dev_t *)sensor;
   bool ret;
-  int res;
 
   power_on(sensor);
 
-  res = -ETIMEDOUT;
   for (int i = 0; i < POWER_CHECK_RETRY; i++)
     {
       nxsig_usleep(POWER_CHECK_TIME);
@@ -1124,7 +1121,7 @@ static int32_t get_value32(FAR isx019_dev_t *priv, uint32_t id)
   return val.value32;
 }
 
-static void store_default_value(FAR isx019_dev_t *priv)
+void isx019_store_default_value(FAR isx019_dev_t *priv)
 {
   FAR isx019_default_value_t *def = &priv->default_value;
 
@@ -1160,7 +1157,7 @@ static int isx019_init(FAR struct imgsensor_s *sensor)
   set_drive_mode(priv);
   fpga_init(priv);
   initialize_wbmode(priv);
-  initialize_jpg_quality(priv);
+  isx019_initialize_jpg_quality(priv);
 
   /* Set initial gamma value for getting current value API. */
 
@@ -1172,7 +1169,7 @@ static int isx019_init(FAR struct imgsensor_s *sensor)
 
   clk = board_isx019_get_master_clock();
   priv->clock_ratio = (float)clk / ISX019_STANDARD_MASTER_CLOCK;
-  store_default_value(priv);
+  isx019_store_default_value(priv);
 
   /* Store initial HUE value for getting current value API. */
 
@@ -2625,7 +2622,7 @@ static int set_gamma(FAR isx019_dev_t *priv,
   return OK;
 }
 
-static void search_dqt_data(int32_t quality,
+void isx019_search_dqt_data(int32_t quality,
                             FAR const uint8_t **y_head,
                             FAR const uint8_t **y_calc,
                             FAR const uint8_t **c_head,
@@ -2707,7 +2704,7 @@ static int set_jpg_quality(FAR isx019_dev_t *priv,
 
   /* Set JPEG quality by setting DQT information to FPGA. */
 
-  search_dqt_data(val.value32, &y_head, &y_calc, &c_head, &c_calc);
+  isx019_search_dqt_data(val.value32, &y_head, &y_calc, &c_head, &c_calc);
   if ((y_head == NULL) ||
       (y_calc == NULL) ||
       (c_head == NULL) ||
@@ -2743,7 +2740,12 @@ static int set_jpg_quality(FAR isx019_dev_t *priv,
   return OK;
 }
 
-static int initialize_jpg_quality(FAR isx019_dev_t *priv)
+int32_t isx019_get_initial_jpeg_quality(void)
+{
+  return CONFIG_VIDEO_ISX019_INITIAL_JPEG_QUALITY;
+}
+
+int isx019_initialize_jpg_quality(FAR isx019_dev_t *priv)
 {
   imgsensor_value_t val;
 
