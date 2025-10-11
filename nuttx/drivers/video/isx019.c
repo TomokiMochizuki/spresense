@@ -2622,7 +2622,7 @@ static int set_gamma(FAR isx019_dev_t *priv,
   return OK;
 }
 
-static void search_dqt_data(int32_t quality,
+void isx019_search_dqt_data(int32_t quality,
                             FAR const uint8_t **y_head,
                             FAR const uint8_t **y_calc,
                             FAR const uint8_t **c_head,
@@ -2704,7 +2704,7 @@ static int set_jpg_quality(FAR isx019_dev_t *priv,
 
   /* Set JPEG quality by setting DQT information to FPGA. */
 
-  search_dqt_data(val.value32, &y_head, &y_calc, &c_head, &c_calc);
+  isx019_search_dqt_data(val.value32, &y_head, &y_calc, &c_head, &c_calc);
   if ((y_head == NULL) ||
       (y_calc == NULL) ||
       (c_head == NULL) ||
@@ -2738,6 +2738,11 @@ static int set_jpg_quality(FAR isx019_dev_t *priv,
 
   priv->jpg_quality = val.value32;
   return OK;
+}
+
+int32_t isx019_get_initial_jpeg_quality(void)
+{
+  return CONFIG_VIDEO_ISX019_INITIAL_JPEG_QUALITY;
 }
 
 int isx019_initialize_jpg_quality(FAR isx019_dev_t *priv)
