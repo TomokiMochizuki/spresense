@@ -1153,7 +1153,15 @@ static int isx019_init(FAR struct imgsensor_s *sensor)
   uint32_t clk;
 
   power_on(sensor);
-  confirm_power_on(sensor);
+  for (int i = 0; i < POWER_CHECK_RETRY; i++)
+    {
+      nxsig_usleep(POWER_CHECK_TIME);
+      
+      if (confirm_power_on(sensor) == OK)
+        {
+          break;
+        }
+    }
   set_drive_mode(priv);
   fpga_init(priv);
   initialize_wbmode(priv);
