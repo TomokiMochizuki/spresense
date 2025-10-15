@@ -1574,7 +1574,19 @@ static int isx019_start_capture(FAR struct imgsensor_s *sensor,
   regval = FPGA_DATA_OUTPUT_START;
   fpga_i2c_write(priv, FPGA_DATA_OUTPUT, &regval, 1);
 
-  fpga_activate_setting(priv);
+  /* Conditional execution of fpga_activate_setting for backward compatibility */
+  if (!priv->sensor.skip_fpga_activate)
+    {
+      /* Default behavior: Synchronously wait for FPGA activation (blocking) */
+      fpga_activate_setting(priv);
+    }
+  else
+    {
+      /* New behavior: Only issue ACTIVATE_REQUEST and return immediately */
+      regval = FPGA_ACTIVATE_REQUEST;
+      fpga_i2c_write(priv, FPGA_ACTIVATE, &regval, 1);
+    }
+
   nxmutex_unlock(&priv->fpga_lock);
   priv->stream = type;
 
