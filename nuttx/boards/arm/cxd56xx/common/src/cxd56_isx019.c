@@ -97,7 +97,6 @@ int board_isx019_confirm_power_on(void)
 int board_isx019_power_off(void)
 {
   int ret;
-  int i;
 
   ret = board_power_control(POWER_IMAGE_SENSOR, false);
   if (ret)
