@@ -216,7 +216,7 @@ extern "C"
 
 #define VIDIOC_DO_HALFPUSH            _VIDIOC(0x00c2)
 
-/* Start taking picture
+/* Start taking picture (synchronous, backward compatible)
  *
  * Type is int32_t, not address pointer.\n
  * 0 or negative value means continuing until VIDIOC_TAKEPICT_STOP. \n
@@ -229,6 +229,24 @@ extern "C"
 /* Stop taking picture */
 
 #define VIDIOC_TAKEPICT_STOP          _VIDIOC(0x00c4)
+
+/* Prepare taking picture (non-blocking, issues FPGA_ACTIVATE_REQUEST only)
+ *
+ * Type is int32_t, not address pointer.\n
+ * 0 or negative value means continuing until VIDIOC_TAKEPICT_STOP. \n
+ * Positive value(to be supported) means continuing
+ * up to a specified number of times  or until VIDIOC_TAKEPICT_STOP.
+ */
+
+#define VIDIOC_TAKEPICT_PREPARE       _VIDIOC(0x00c9)
+
+/* Continue taking picture after FPGA activation confirmed
+ *
+ * Must be called after VIDIOC_TAKEPICT_PREPARE and FPGA_ACTIVATE polling.
+ * No arguments required.
+ */
+
+#define VIDIOC_TAKEPICT_CONTINUE      _VIDIOC(0x00ca)
 
 /* Query control for scene parameter
  *  Address pointing to struct v4s_query_ext_ctrl_scene

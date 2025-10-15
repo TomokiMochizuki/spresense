@@ -123,6 +123,9 @@ static int video_streamoff(FAR struct video_mng_s *vmng,
                            FAR enum v4l2_buf_type *type);
 static int video_do_halfpush(FAR struct video_mng_s *priv,
                              bool enable);
+static int video_takepict_prepare(FAR struct video_mng_s *vmng,
+                                  int32_t                capture_num);
+static int video_takepict_continue(FAR struct video_mng_s *vmng);
 static int video_takepict_start(FAR struct video_mng_s *vmng,
                                 int32_t                capture_num);
 static int video_takepict_stop(FAR struct video_mng_s *vmng,
@@ -455,27 +458,22 @@ static void get_clipped_format(uint8_t              nr_fmt,
     }
 }
 
-static int start_capture(FAR video_mng_t *vmng,
-                         enum v4l2_buf_type type,
-                         uint8_t nr_fmt,
-                         FAR video_format_t *fmt,
-                         FAR struct v4l2_rect *clip,
-                         FAR struct v4l2_fract *interval,
-                         uintptr_t bufaddr, uint32_t bufsize)
+/* Start capture - IMGSENSOR part only (for split capture flow) */
+static int start_capture_imgsensor(FAR video_mng_t *vmng,
+                                    enum v4l2_buf_type type,
+                                    uint8_t nr_fmt,
+                                    FAR video_format_t *fmt,
+                                    FAR struct v4l2_rect *clip,
+                                    FAR struct v4l2_fract *interval)
 {
   video_format_t c_fmt[MAX_VIDEO_FMT];
-  imgdata_format_t df[MAX_VIDEO_FMT];
   imgsensor_format_t sf[MAX_VIDEO_FMT];
-  imgdata_interval_t di;
   imgsensor_interval_t si;
 
-  ASSERT(fmt && interval && vmng->imgsensor && vmng->imgdata);
+  ASSERT(fmt && interval && vmng->imgsensor);
 
   get_clipped_format(nr_fmt, fmt, clip, c_fmt);
 
-  convert_to_imgdatafmt(&c_fmt[VIDEO_FMT_MAIN], &df[IMGDATA_FMT_MAIN]);
-  convert_to_imgdatafmt(&c_fmt[VIDEO_FMT_SUB], &df[IMGDATA_FMT_SUB]);
-  convert_to_imgdatainterval(interval, &di);
   convert_to_imgsensorfmt(&fmt[VIDEO_FMT_MAIN], &sf[IMGSENSOR_FMT_MAIN]);
   convert_to_imgsensorfmt(&fmt[VIDEO_FMT_SUB], &sf[IMGSENSOR_FMT_SUB]);
   convert_to_imgsensorinterval(interval, &si);
@@ -484,10 +482,58 @@ static int start_capture(FAR video_mng_t *vmng,
      type == V4L2_BUF_TYPE_VIDEO_CAPTURE ?
      IMGSENSOR_STREAM_TYPE_VIDEO : IMGSENSOR_STREAM_TYPE_STILL,
      nr_fmt, sf, &si);
+
+  return OK;
+}
+
+/* Start capture - IMGDATA part only (for split capture flow) */
+static int start_capture_imgdata(FAR video_mng_t *vmng,
+                                 enum v4l2_buf_type type,
+                                 uint8_t nr_fmt,
+                                 FAR video_format_t *fmt,
+                                 FAR struct v4l2_rect *clip,
+                                 FAR struct v4l2_fract *interval,
+                                 uintptr_t bufaddr, uint32_t bufsize)
+{
+  video_format_t c_fmt[MAX_VIDEO_FMT];
+  imgdata_format_t df[MAX_VIDEO_FMT];
+  imgdata_interval_t di;
+
+  ASSERT(fmt && interval && vmng->imgdata);
+
+  get_clipped_format(nr_fmt, fmt, clip, c_fmt);
+
+  convert_to_imgdatafmt(&c_fmt[VIDEO_FMT_MAIN], &df[IMGDATA_FMT_MAIN]);
+  convert_to_imgdatafmt(&c_fmt[VIDEO_FMT_SUB], &df[IMGDATA_FMT_SUB]);
+  convert_to_imgdatainterval(interval, &di);
+
   IMGDATA_START_CAPTURE(vmng->imgdata,
      nr_fmt, df, &di, video_complete_capture, vmng);
   IMGDATA_SET_BUF(vmng->imgdata, (FAR uint8_t *)bufaddr, bufsize);
+
   return OK;
+}
+
+/* Start capture - complete (for backward compatibility) */
+static int start_capture(FAR video_mng_t *vmng,
+                         enum v4l2_buf_type type,
+                         uint8_t nr_fmt,
+                         FAR video_format_t *fmt,
+                         FAR struct v4l2_rect *clip,
+                         FAR struct v4l2_fract *interval,
+                         uintptr_t bufaddr, uint32_t bufsize)
+{
+  int ret;
+
+  ret = start_capture_imgsensor(vmng, type, nr_fmt, fmt, clip, interval);
+  if (ret != OK)
+    {
+      return ret;
+    }
+
+  ret = start_capture_imgdata(vmng, type, nr_fmt, fmt, clip, interval,
+                               bufaddr, bufsize);
+  return ret;
 }
 
 static void stop_capture(FAR video_mng_t *vmng, enum v4l2_buf_type type)
@@ -1811,11 +1857,10 @@ static int video_do_halfpush(FAR struct video_mng_s *priv, bool enable)
   return video_s_ext_ctrls(priv, &ext_controls);
 }
 
-static int video_takepict_start(FAR struct video_mng_s *vmng,
-                                int32_t capture_num)
+static int video_takepict_prepare(FAR struct video_mng_s *vmng,
+                                  int32_t capture_num)
 {
   enum video_state_e   next_video_state;
-  FAR vbuf_container_t *container;
   irqstate_t           flags;
   int                  ret = OK;
 
@@ -1851,30 +1896,80 @@ static int video_takepict_start(FAR struct video_mng_s *vmng,
 
       leave_critical_section(flags);
 
+      /* Start still stream capture - IMGSENSOR part only (non-blocking) */
+
+      start_capture_imgsensor(vmng,
+                              V4L2_BUF_TYPE_STILL_CAPTURE,
+                              vmng->still_inf.nr_fmt,
+                              vmng->still_inf.fmt,
+                              &vmng->still_inf.clip,
+                              &vmng->still_inf.frame_interval);
+
+      vmng->still_inf.state = VIDEO_STATE_CAPTURE;
+    }
+
+  nxmutex_unlock(&vmng->still_inf.lock_state);
+  return ret;
+}
+
+static int video_takepict_continue(FAR struct video_mng_s *vmng)
+{
+  FAR vbuf_container_t *container;
+  int                  ret = OK;
+
+  if (vmng == NULL)
+    {
+      return -EINVAL;
+    }
+
+  nxmutex_lock(&vmng->still_inf.lock_state);
+
+  if (vmng->still_inf.state != VIDEO_STATE_CAPTURE)
+    {
+      ret = -EPERM;
+    }
+  else
+    {
       container =
         video_framebuff_get_vacant_container(&vmng->still_inf.bufinf);
       if (container != NULL)
         {
-          /* Start still stream capture */
+          /* Start still stream capture - IMGDATA part only */
 
-          start_capture(vmng,
-                        V4L2_BUF_TYPE_STILL_CAPTURE,
-                        vmng->still_inf.nr_fmt,
-                        vmng->still_inf.fmt,
-                        &vmng->still_inf.clip,
-                        &vmng->still_inf.frame_interval,
-                        container->buf.m.userptr,
-                        container->buf.length);
-
-          vmng->still_inf.state = VIDEO_STATE_CAPTURE;
+          start_capture_imgdata(vmng,
+                                V4L2_BUF_TYPE_STILL_CAPTURE,
+                                vmng->still_inf.nr_fmt,
+                                vmng->still_inf.fmt,
+                                &vmng->still_inf.clip,
+                                &vmng->still_inf.frame_interval,
+                                container->buf.m.userptr,
+                                container->buf.length);
         }
       else
         {
-          vmng->still_inf.state = VIDEO_STATE_STREAMON;
+          ret = -ENOMEM;
         }
     }
 
   nxmutex_unlock(&vmng->still_inf.lock_state);
+  return ret;
+}
+
+static int video_takepict_start(FAR struct video_mng_s *vmng,
+                                int32_t capture_num)
+{
+  int ret;
+
+  /* Synchronous capture: PREPARE + CONTINUE */
+  /* Note: skip_fpga_activate defaults to false, so this will block */
+
+  ret = video_takepict_prepare(vmng, capture_num);
+  if (ret != OK)
+    {
+      return ret;
+    }
+
+  ret = video_takepict_continue(vmng);
   return ret;
 }
 
@@ -2990,6 +3085,14 @@ static int video_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
 
       case VIDIOC_DO_HALFPUSH:
         ret = video_do_halfpush(priv, arg);
+        break;
+
+      case VIDIOC_TAKEPICT_PREPARE:
+        ret = video_takepict_prepare(priv, (int32_t)arg);
+        break;
+
+      case VIDIOC_TAKEPICT_CONTINUE:
+        ret = video_takepict_continue(priv);
         break;
 
       case VIDIOC_TAKEPICT_START:

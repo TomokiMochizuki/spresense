@@ -402,6 +402,7 @@ struct imgsensor_ops_s
 struct imgsensor_s
 {
   FAR const struct imgsensor_ops_s *ops;
+  bool skip_fpga_activate; /* Skip blocking FPGA activation for split capture flow */
 };
 
 #ifdef __cplusplus
