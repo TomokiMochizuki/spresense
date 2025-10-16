@@ -105,9 +105,9 @@ static int video_qbuf(FAR struct video_mng_s *vmng,
 static int video_qbuf_prepare(FAR struct video_mng_s *vmng,
                               FAR struct v4l2_buffer *buf);
 static int video_qbuf_continue(FAR struct video_mng_s *vmng,
-                               enum v4l2_buf_type type);
+                               FAR struct v4l2_buffer *buf);
 static int video_qbuf_activate(FAR struct video_mng_s *vmng,
-                               enum v4l2_buf_type type);
+                               FAR struct v4l2_buffer *buf);
 static int video_dqbuf(FAR struct video_mng_s *vmng,
                        FAR struct v4l2_buffer *buf,
                        int oflags);
@@ -115,13 +115,13 @@ static int video_dqbuf_prepare(FAR struct video_mng_s *vmng,
                                 FAR struct v4l2_buffer *buf,
                                 int oflags);
 static int video_dqbuf_continue(FAR struct video_mng_s *vmng,
-                                 enum v4l2_buf_type type);
+                                 FAR struct v4l2_buffer *buf);
 static int video_dqbuf_activate(FAR struct video_mng_s *vmng,
-                                 enum v4l2_buf_type type);
+                                 FAR struct v4l2_buffer *buf);
 static int video_dqbuf_get(FAR struct video_mng_s *vmng,
                            FAR struct v4l2_buffer *buf);
 static int video_cancel_dqbuf(FAR struct video_mng_s *vmng,
-                              enum v4l2_buf_type type);
+                              FAR struct v4l2_buffer *buf);
 
 /* Split version of change_video_state for non-blocking capture */
 static int change_video_state_prepare(FAR struct video_mng_s *vmng,
@@ -536,26 +536,27 @@ static int start_capture_imgdata(FAR video_mng_t *vmng,
 }
 
 /* Start capture - complete (for backward compatibility) */
-static int start_capture(FAR video_mng_t *vmng,
-                         enum v4l2_buf_type type,
-                         uint8_t nr_fmt,
-                         FAR video_format_t *fmt,
-                         FAR struct v4l2_rect *clip,
-                         FAR struct v4l2_fract *interval,
-                         uintptr_t bufaddr, uint32_t bufsize)
-{
-  int ret;
 
-  ret = start_capture_imgsensor(vmng, type, nr_fmt, fmt, clip, interval);
-  if (ret != OK)
-    {
-      return ret;
-    }
+// static int start_capture(FAR video_mng_t *vmng,
+//                          enum v4l2_buf_type type,
+//                          uint8_t nr_fmt,
+//                          FAR video_format_t *fmt,
+//                          FAR struct v4l2_rect *clip,
+//                          FAR struct v4l2_fract *interval,
+//                          uintptr_t bufaddr, uint32_t bufsize)
+// {
+//   int ret;
 
-  ret = start_capture_imgdata(vmng, type, nr_fmt, fmt, clip, interval,
-                               bufaddr, bufsize);
-  return ret;
-}
+//   ret = start_capture_imgsensor(vmng, type, nr_fmt, fmt, clip, interval);
+//   if (ret != OK)
+//     {
+//       return ret;
+//     }
+
+//   ret = start_capture_imgdata(vmng, type, nr_fmt, fmt, clip, interval,
+//                                bufaddr, bufsize);
+//   return ret;
+// }
 
 static void stop_capture(FAR video_mng_t *vmng, enum v4l2_buf_type type)
 {
@@ -568,7 +569,7 @@ static void stop_capture(FAR video_mng_t *vmng, enum v4l2_buf_type type)
 }
 
 /* Split version: Prepare VIDEO_CAPTURE (IMGSENSOR only, skip FPGA_ACTIVATE) */
-static int change_video_state_prepare(FAR video_mng_t    *vmng,
+static int change_video_state_prepare(FAR struct video_mng_s *vmng,
                                       enum video_state_e next_state)
 {
   enum video_state_e current_state = vmng->video_inf.state;
@@ -592,7 +593,7 @@ static int change_video_state_prepare(FAR video_mng_t    *vmng,
 }
 
 /* Split version: Continue VIDEO_CAPTURE (IMGDATA) */
-static int change_video_state_continue(FAR video_mng_t    *vmng,
+static int change_video_state_continue(FAR struct video_mng_s *vmng,
                                        enum video_state_e next_state)
 {
   enum video_state_e current_state = vmng->video_inf.state;
@@ -1298,7 +1299,7 @@ static int video_qbuf_prepare(FAR struct video_mng_s *vmng,
 
 /* Split QBUF step 2: Start capture IMGSENSOR only (calls change_video_state_prepare) */
 static int video_qbuf_continue(FAR struct video_mng_s *vmng,
-                                enum v4l2_buf_type type)
+                                FAR struct v4l2_buffer *buf)
 {
   FAR video_type_inf_t *type_inf;
   enum video_state_e   next_video_state;
@@ -1310,7 +1311,7 @@ static int video_qbuf_continue(FAR struct video_mng_s *vmng,
       return -EINVAL;
     }
 
-  type_inf = get_video_type_inf(vmng, type);
+  type_inf = get_video_type_inf(vmng, buf->type);
   if (type_inf == NULL)
     {
       return -EINVAL;
@@ -1322,7 +1323,7 @@ static int video_qbuf_continue(FAR struct video_mng_s *vmng,
     {
       leave_critical_section(flags);
 
-      if (type == V4L2_BUF_TYPE_VIDEO_CAPTURE)
+      if (buf->type == V4L2_BUF_TYPE_VIDEO_CAPTURE)
         {
           /* VIDEO_CAPTURE: call change_video_state_prepare (IMGSENSOR only, no container) */
           nxmutex_lock(&vmng->still_inf.lock_state);
@@ -1336,7 +1337,7 @@ static int video_qbuf_continue(FAR struct video_mng_s *vmng,
           /* STILL_CAPTURE: start_capture_imgsensor only (no container needed) */
           type_inf->seqnum = 0;
           ret = start_capture_imgsensor(vmng,
-                                       type,
+                                       buf->type,
                                        type_inf->nr_fmt,
                                        type_inf->fmt,
                                        &type_inf->clip,
@@ -1356,7 +1357,7 @@ static int video_qbuf_continue(FAR struct video_mng_s *vmng,
 
 /* Split QBUF step 3: Activate capture (IMGDATA start) */
 static int video_qbuf_activate(FAR struct video_mng_s *vmng,
-                                enum v4l2_buf_type type)
+                                FAR struct v4l2_buffer *buf)
 {
   FAR video_type_inf_t *type_inf;
   FAR vbuf_container_t *container;
@@ -1368,14 +1369,14 @@ static int video_qbuf_activate(FAR struct video_mng_s *vmng,
       return -EINVAL;
     }
 
-  type_inf = get_video_type_inf(vmng, type);
+  type_inf = get_video_type_inf(vmng, buf->type);
   if (type_inf == NULL)
     {
       return -EINVAL;
     }
 
   nxmutex_lock(&type_inf->lock_state);
-  if (type == V4L2_BUF_TYPE_VIDEO_CAPTURE)
+  if (buf->type == V4L2_BUF_TYPE_VIDEO_CAPTURE)
     {
       /* VIDEO_CAPTURE: call change_video_state_continue (IMGDATA) */
       nxmutex_lock(&vmng->still_inf.lock_state);
@@ -1392,7 +1393,7 @@ static int video_qbuf_activate(FAR struct video_mng_s *vmng,
       if (container != NULL)
         {
           ret = start_capture_imgdata(vmng,
-                                      type,
+                                      buf->type,
                                       type_inf->nr_fmt,
                                       type_inf->fmt,
                                       &type_inf->clip,
@@ -1428,7 +1429,7 @@ static int video_qbuf(FAR struct video_mng_s *vmng,
     }
 
   /* Step 2: Start IMGSENSOR (CONTINUE) */
-  ret = video_qbuf_continue(vmng, buf->type);
+  ret = video_qbuf_continue(vmng, buf);
   if (ret == -EPERM)
     {
       /* In capture, QBUF is permitted but no action needed */
@@ -1441,7 +1442,7 @@ static int video_qbuf(FAR struct video_mng_s *vmng,
     }
 
   /* Step 3: Start IMGDATA (ACTIVATE) */
-  ret = video_qbuf_activate(vmng, buf->type);
+  ret = video_qbuf_activate(vmng, buf);
 
   return ret;
 }
@@ -1453,7 +1454,6 @@ static int video_dqbuf_prepare(FAR struct video_mng_s *vmng,
 {
   FAR video_type_inf_t *type_inf;
   FAR vbuf_container_t *container;
-  FAR sem_t            *dqbuf_wait_flg;
 
   if (vmng == NULL)
     {
@@ -1485,7 +1485,7 @@ static int video_dqbuf_prepare(FAR struct video_mng_s *vmng,
 }
 
 static int video_dqbuf_continue(FAR struct video_mng_s *vmng,
-                                 enum v4l2_buf_type type)
+                                 FAR struct v4l2_buffer *buf)
 {
   irqstate_t           flags;
   FAR video_type_inf_t *type_inf;
@@ -1498,7 +1498,7 @@ static int video_dqbuf_continue(FAR struct video_mng_s *vmng,
       return -EINVAL;
     }
 
-  type_inf = get_video_type_inf(vmng, type);
+  type_inf = get_video_type_inf(vmng, buf->type);
   if (type_inf == NULL)
     {
       return -EINVAL;
@@ -1514,7 +1514,7 @@ static int video_dqbuf_continue(FAR struct video_mng_s *vmng,
     }
 
   /* This corresponds to the do-while loop body (lines 1514-1522) */
-  if (type == V4L2_BUF_TYPE_VIDEO_CAPTURE)
+  if (buf->type == V4L2_BUF_TYPE_VIDEO_CAPTURE)
     {
       /* If start capture condition is satisfied, start capture (IMGSENSOR only) */
       flags = enter_critical_section();
@@ -1534,7 +1534,7 @@ static int video_dqbuf_continue(FAR struct video_mng_s *vmng,
 
 /* Split DQBUF step 3: Activate capture (IMGDATA start) */
 static int video_dqbuf_activate(FAR struct video_mng_s *vmng,
-                                 enum v4l2_buf_type type)
+                                 FAR struct v4l2_buffer *buf)
 {
   enum video_state_e   next_video_state;
   irqstate_t           flags;
@@ -1545,7 +1545,7 @@ static int video_dqbuf_activate(FAR struct video_mng_s *vmng,
       return -EINVAL;
     }
 
-  if (type == V4L2_BUF_TYPE_VIDEO_CAPTURE)
+  if (buf->type == V4L2_BUF_TYPE_VIDEO_CAPTURE)
     {
       /* VIDEO_CAPTURE: call change_video_state_continue (IMGDATA) */
       flags = enter_critical_section();
@@ -1578,6 +1578,47 @@ bool video_dqbuf_should_continue_loop(FAR struct video_mng_s *vmng,
   return (type_inf->wait_capture.waitend_cause == VIDEO_WAITEND_CAUSE_STILLSTOP);
 }
 
+/* Check if capture is complete (for non-blocking polling) */
+bool video_is_capture_complete(FAR struct video_mng_s *vmng,
+                                enum v4l2_buf_type type)
+{
+  FAR video_type_inf_t *type_inf;
+
+  if (vmng == NULL)
+    {
+      return false;
+    }
+
+  type_inf = get_video_type_inf(vmng, type);
+  if (type_inf == NULL)
+    {
+      return false;
+    }
+
+  /* Capture is complete if done_container is set */
+  return (type_inf->wait_capture.done_container != NULL);
+}
+
+int video_set_skip_sem_wait(FAR struct video_mng_s *vmng,
+                             enum v4l2_buf_type type, bool skip)
+{
+  FAR video_type_inf_t *type_inf;
+
+  if (vmng == NULL)
+    {
+      return -EINVAL;
+    }
+
+  type_inf = get_video_type_inf(vmng, type);
+  if (type_inf == NULL)
+    {
+      return -EINVAL;
+    }
+
+  type_inf->skip_sem_wait = skip;
+  return OK;
+}
+
 /* Split DQBUF step 4: Get captured data */
 static int video_dqbuf_get(FAR struct video_mng_s *vmng,
                             FAR struct v4l2_buffer *buf)
@@ -1605,6 +1646,7 @@ static int video_dqbuf_get(FAR struct video_mng_s *vmng,
         {
           return -ECANCELED;
         }
+      printf("DQBUF: No captured data available\n");
       return -EIO;
     }
 
@@ -1642,14 +1684,14 @@ static int video_dqbuf(FAR struct video_mng_s *vmng,
   do
     {
       /* Step 2: Start capture IMGSENSOR (CONTINUE) */
-      ret = video_dqbuf_continue(vmng, buf->type);
+      ret = video_dqbuf_continue(vmng, buf);
       if (ret != OK)
         {
           return ret;
         }
 
       /* Step 3: Start IMGDATA (ACTIVATE) */
-      ret = video_dqbuf_activate(vmng, buf->type);
+      ret = video_dqbuf_activate(vmng, buf);
       if (ret != OK)
         {
           return ret;
@@ -1664,11 +1706,11 @@ static int video_dqbuf(FAR struct video_mng_s *vmng,
 }
 
 static int video_cancel_dqbuf(FAR struct video_mng_s *vmng,
-                              enum v4l2_buf_type type)
+                              FAR struct v4l2_buffer *buf)
 {
   FAR video_type_inf_t *type_inf;
 
-  type_inf = get_video_type_inf(vmng, type);
+  type_inf = get_video_type_inf(vmng, buf->type);
   if (type_inf == NULL)
     {
       return -EINVAL;
@@ -3388,11 +3430,11 @@ static int video_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
         break;
 
       case VIDIOC_QBUF_CONTINUE:
-        ret = video_qbuf_continue(priv, (enum v4l2_buf_type)arg);
+        ret = video_qbuf_continue(priv, (FAR struct v4l2_buffer *)arg);
         break;
 
       case VIDIOC_QBUF_ACTIVATE:
-        ret = video_qbuf_activate(priv, (enum v4l2_buf_type)arg);
+        ret = video_qbuf_activate(priv, (FAR struct v4l2_buffer *)arg);
         break;
 
       case VIDIOC_DQBUF:
@@ -3406,31 +3448,19 @@ static int video_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
         break;
 
       case VIDIOC_DQBUF_CONTINUE:
-        ret = video_dqbuf_continue(priv, (enum v4l2_buf_type)arg);
+        ret = video_dqbuf_continue(priv, (FAR struct v4l2_buffer *)arg);
         break;
 
       case VIDIOC_DQBUF_ACTIVATE:
-        ret = video_dqbuf_activate(priv, (enum v4l2_buf_type)arg);
+        ret = video_dqbuf_activate(priv, (FAR struct v4l2_buffer *)arg);
         break;
 
       case VIDIOC_DQBUF_GET:
         ret = video_dqbuf_get(priv, (FAR struct v4l2_buffer *)arg);
         break;
 
-      case VIDIOC_SET_SKIP_SEM_WAIT:
-        {
-          FAR video_type_inf_t *type_inf;
-          bool skip = *(FAR bool *)arg;
-
-          /* Set skip_sem_wait for VIDEO_CAPTURE type */
-          type_inf = &priv->video_inf;
-          type_inf->skip_sem_wait = skip;
-          ret = OK;
-        }
-        break;
-
       case VIDIOC_CANCEL_DQBUF:
-        ret = video_cancel_dqbuf(priv, (FAR enum v4l2_buf_type)arg);
+        ret = video_cancel_dqbuf(priv, (FAR struct v4l2_buffer *)arg);
         break;
 
       case VIDIOC_STREAMON:
@@ -3667,17 +3697,21 @@ static int video_complete_capture(uint8_t err_code, uint32_t datasize,
 
   video_framebuff_capture_done(&type_inf->bufinf);
 
-  if (is_sem_waited(&type_inf->wait_capture.dqbuf_wait_flg))
+  /* If using skip_sem_wait (non-blocking split DQBUF) OR waiting capture in DQBUF,
+   * get/save container and optionally unlock wait
+   */
+  if (type_inf->skip_sem_wait || is_sem_waited(&type_inf->wait_capture.dqbuf_wait_flg))
     {
-      /* If waiting capture in DQBUF,
-       * get/save container and unlock wait
-       */
-
       type_inf->wait_capture.done_container =
         video_framebuff_pop_curr_container(&type_inf->bufinf);
       type_inf->wait_capture.waitend_cause =
         VIDEO_WAITEND_CAUSE_CAPTUREDONE;
-      nxsem_post(&type_inf->wait_capture.dqbuf_wait_flg);
+
+      /* Only post semaphore if someone is actually waiting */
+      if (is_sem_waited(&type_inf->wait_capture.dqbuf_wait_flg))
+        {
+          nxsem_post(&type_inf->wait_capture.dqbuf_wait_flg);
+        }
     }
 
   if (type_inf->remaining_capnum == 0)

@@ -310,14 +310,6 @@ extern "C"
 
 #define VIDIOC_DQBUF_GET              _VIDIOC(0x00cf)
 
-/* Set skip semaphore wait flag for non-blocking DQBUF flow
- *
- * Address pointing to bool (true = skip wait, false = wait)
- * Used by C2A framework to avoid blocking operations
- */
-
-#define VIDIOC_SET_SKIP_SEM_WAIT      _VIDIOC(0x00d0)
-
 /* Query control for scene parameter
  *  Address pointing to struct v4s_query_ext_ctrl_scene
  */

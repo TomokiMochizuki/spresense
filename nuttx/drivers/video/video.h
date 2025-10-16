@@ -218,4 +218,18 @@ void video_initialize_resources(FAR video_mng_t *vmng);
 bool video_dqbuf_should_continue_loop(FAR struct video_mng_s *vmng,
                                        enum v4l2_buf_type type);
 
+/* Set skip semaphore wait flag for non-blocking DQBUF flow
+ *
+ *  This function sets skip_sem_wait flag for the specified buffer type.
+ */
+int video_set_skip_sem_wait(FAR struct video_mng_s *vmng,
+                             enum v4l2_buf_type type, bool skip);
+
+/* Check if capture is complete (for non-blocking polling)
+ *
+ *  Return true if capture is complete (done_container is set), false otherwise.
+ */
+bool video_is_capture_complete(FAR struct video_mng_s *vmng,
+                                enum v4l2_buf_type type);
+
 #endif /* __DRIVERS_VIDEO_VIDEO_H */
