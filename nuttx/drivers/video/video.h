@@ -101,6 +101,7 @@ struct video_type_inf_s
   FAR uint8_t          *bufheap;   /* for V4L2_MEMORY_MMAP buffers */
   FAR struct pollfd    *fds;
   uint32_t             seqnum;
+  bool                 skip_sem_wait; /* Skip semaphore wait in DQBUF_CONTINUE */
 };
 
 typedef struct video_type_inf_s video_type_inf_t;
@@ -209,5 +210,12 @@ size_t video_get_sensor_num(void);
  *  This function initializes video resources.
  */
 void video_initialize_resources(FAR video_mng_t *vmng);
+
+/* Check if DQBUF should continue looping
+ *
+ *  Return true if DQBUF should continue looping, false otherwise.
+ */
+bool video_dqbuf_should_continue_loop(FAR struct video_mng_s *vmng,
+                                       enum v4l2_buf_type type);
 
 #endif /* __DRIVERS_VIDEO_VIDEO_H */

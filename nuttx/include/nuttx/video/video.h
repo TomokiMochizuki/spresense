@@ -248,6 +248,76 @@ extern "C"
 
 #define VIDIOC_TAKEPICT_CONTINUE      _VIDIOC(0x00ca)
 
+/* Enqueue buffer with capture preparation (split QBUF step 1)
+ *
+ * Queue buffer and prepare VIDEO_CAPTURE stream start (IMGSENSOR only, skip FPGA_ACTIVATE).
+ * Address pointing to struct #v4l2_buffer
+ * Must call VIDIOC_QBUF_CONTINUE after FPGA_ACTIVATE confirmation.
+ */
+
+#define VIDIOC_QBUF_PREPARE           _VIDIOC(0x00cb)
+
+/* Continue enqueued buffer capture - IMGSENSOR only (split QBUF step 2)
+ *
+ * Start IMGSENSOR configuration (skip FPGA_ACTIVATE).
+ * Address pointing to enum #v4l2_buf_type
+ * Must call VIDIOC_QBUF_ACTIVATE after FPGA_ACTIVATE confirmation.
+ */
+
+#define VIDIOC_QBUF_CONTINUE          _VIDIOC(0x00cc)
+
+/* Activate buffer capture - IMGDATA start (split QBUF step 3)
+ *
+ * Start IMGDATA capture after FPGA_ACTIVATE confirmed.
+ * Address pointing to enum #v4l2_buf_type
+ */
+
+#define VIDIOC_QBUF_ACTIVATE          _VIDIOC(0x00d1)
+
+/* Prepare dequeue with capture start (split DQBUF step 1)
+ *
+ * Prepare semaphore wait and start VIDEO_CAPTURE if needed (IMGSENSOR only, skip FPGA_ACTIVATE).
+ * Address pointing to enum #v4l2_buf_type
+ * Must call VIDIOC_DQBUF_CONTINUE to start capture.
+ */
+
+#define VIDIOC_DQBUF_PREPARE          _VIDIOC(0x00cd)
+
+/* Continue dequeue and start capture - IMGSENSOR only (split DQBUF step 2)
+ *
+ * Start VIDEO_CAPTURE with change_video_state_prepare (IMGSENSOR only, skip FPGA_ACTIVATE).
+ * Optionally wait for semaphore based on skip_sem_wait flag.
+ * Address pointing to enum #v4l2_buf_type
+ * Must call VIDIOC_DQBUF_ACTIVATE after FPGA_ACTIVATE confirmation.
+ */
+
+#define VIDIOC_DQBUF_CONTINUE         _VIDIOC(0x00ce)
+
+/* Activate dequeue capture - IMGDATA start (split DQBUF step 3)
+ *
+ * Start IMGDATA capture after FPGA_ACTIVATE confirmed.
+ * Address pointing to enum #v4l2_buf_type
+ */
+
+#define VIDIOC_DQBUF_ACTIVATE         _VIDIOC(0x00d2)
+
+/* Get dequeued buffer data (split DQBUF step 4)
+ *
+ * Retrieve captured data after VIDIOC_DQBUF_CONTINUE succeeds and FPGA_ACTIVATE completes.
+ * Address pointing to struct #v4l2_buffer
+ * Return: 0 on success, error code on failure
+ */
+
+#define VIDIOC_DQBUF_GET              _VIDIOC(0x00cf)
+
+/* Set skip semaphore wait flag for non-blocking DQBUF flow
+ *
+ * Address pointing to bool (true = skip wait, false = wait)
+ * Used by C2A framework to avoid blocking operations
+ */
+
+#define VIDIOC_SET_SKIP_SEM_WAIT      _VIDIOC(0x00d0)
+
 /* Query control for scene parameter
  *  Address pointing to struct v4s_query_ext_ctrl_scene
  */
