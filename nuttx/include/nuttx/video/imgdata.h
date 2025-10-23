@@ -54,7 +54,7 @@
 #define IMGDATA_UNINIT(d) \
   ((d)->ops->uninit ? (d)->ops->uninit(d) : -ENOTTY)
 #define IMGDATA_SET_BUF(d, a, s) \
-  ((d)->ops->set_buf ? (d)->ops->set_buf(d, a, s) : NULL)
+  ((d)->ops->set_buf ? (d)->ops->set_buf(d, a, s) : -ENOTTY)
 #define IMGDATA_VALIDATE_FRAME_SETTING(d, n, f, i) \
   ((d)->ops->validate_frame_setting ? \
    (d)->ops->validate_frame_setting(d, n, f, i) : -ENOTTY)
