@@ -530,7 +530,7 @@ static int start_capture_imgdata(FAR video_mng_t *vmng,
 
   IMGDATA_START_CAPTURE(vmng->imgdata,
      nr_fmt, df, &di, video_complete_capture, vmng);
-  IMGDATA_SET_BUF(vmng->imgdata, (FAR uint8_t *)bufaddr, bufsize);
+  IMGDATA_SET_BUF((FAR struct imgdata_s *)vmng->imgdata, (uint8_t *)bufaddr, bufsize);
 
   return OK;
 }
@@ -3739,8 +3739,8 @@ static int video_complete_capture(uint8_t err_code, uint32_t datasize,
         }
       else
         {
-          IMGDATA_SET_BUF(vmng->imgdata,
-            (FAR uint8_t *)container->buf.m.userptr,
+          IMGDATA_SET_BUF((FAR struct imgdata_s *)vmng->imgdata,
+            (uint8_t *)container->buf.m.userptr,
             container->buf.length);
           container->buf.sequence = type_inf->seqnum++;
         }
