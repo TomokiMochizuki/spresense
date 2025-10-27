@@ -1067,7 +1067,7 @@ static int confirm_power_on(FAR struct imgsensor_s *sensor)
 
 static int power_off(FAR struct imgsensor_s *sensor)
 {
-  (void*)sensor;
+  (void)sensor;
   board_isx019_set_reset();
   int ret = board_isx019_power_off();
   return ret;
