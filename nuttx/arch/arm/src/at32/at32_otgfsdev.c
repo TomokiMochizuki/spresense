@@ -77,7 +77,7 @@
  * configuration would not allocate any TxFIFO space to OUT endpoints.
  */
 
-#ifndef CONFIG_USBDEV_RXFIFO_SIZE
+#ifndef CONFIG_USBMSC_RXFIFO_SIZE
 #  define CONFIG_USBDEV_RXFIFO_SIZE 512
 #endif
 
