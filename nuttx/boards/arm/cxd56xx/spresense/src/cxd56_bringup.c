@@ -435,7 +435,7 @@ int cxd56_bringup(void)
 #ifdef CONFIG_CXD56_SPISD
   /* Mount the SPI-based MMC/SD block driver */
 
-  ret = board_spisd_initialize(0, CONFIG_CXD56_SPISD_SPI_CH);
+  ret = board_spisd_initialize(1, CONFIG_CXD56_SPISD_SPI_CH);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize SPI device to MMC/SD: %d\n",

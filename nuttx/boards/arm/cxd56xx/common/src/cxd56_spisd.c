@@ -24,6 +24,7 @@
 
 #include <nuttx/config.h>
 
+#include <stdio.h>
 #include <debug.h>
 #include <nuttx/mmcsd.h>
 #include <nuttx/board.h>
@@ -38,13 +39,13 @@
 /* Configuration ************************************************************/
 
 #ifndef CONFIG_CXD56_SPISD_SLOT_NO
-#  define CONFIG_CXD56_SPISD_SLOT_NO 0
+#  define CONFIG_CXD56_SPISD_SLOT_NO 1
 #endif
 
 /* Please configure the pin assignment for your board */
 
 #ifndef MMCSD_DETECT
-#  define MMCSD_DETECT PIN_I2S0_DATA_OUT
+#  define MMCSD_DETECT PIN_SDIO_CD
 #endif
 
 /****************************************************************************
@@ -61,6 +62,8 @@
 
 int board_spisd_initialize(int minor, int bus)
 {
+  char devpath[16];
+  char mntpath[16];
   int ret;
   struct spi_dev_s *spi;
 
@@ -91,7 +94,10 @@ int board_spisd_initialize(int minor, int bus)
 
   /* Mount filesystem */
 
-  ret = nx_mount("/dev/mmcsd0", "/mnt/sd0", "vfat", 0, NULL);
+  snprintf(devpath, sizeof(devpath), "/dev/mmcsd%d", minor);
+  snprintf(mntpath, sizeof(mntpath), "/mnt/sd%d", minor);
+
+  ret = nx_mount(devpath, mntpath, "vfat", 0, NULL);
   if (ret < 0)
     {
       _err("ERROR: Failed to mount the SDCARD. %d\n", ret);

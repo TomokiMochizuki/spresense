@@ -83,9 +83,23 @@ uint8_t cxd56_spi0status(struct spi_dev_s *dev, uint32_t devid)
 #endif
 
 #ifdef CONFIG_CXD56_SPI3
+static uint32_t cxd56_spi3slavetype(uint32_t devid)
+{
+#if defined(CONFIG_CXD56_SPISD) && (CONFIG_CXD56_SPISD_SPI_CH == 3)
+  if (SPIDEVID_TYPE(devid) == SPIDEVTYPE_MMCSD)
+    {
+      return 1;
+    }
+#endif
+
+  return 0;
+}
+
 void cxd56_spi3select(struct spi_dev_s *dev, uint32_t devid,
                       bool selected)
 {
+  uint32_t slavetype = cxd56_spi3slavetype(devid);
+
   spiinfo("devid: %d CS: %s\n", (int)devid,
           selected ? "assert" : "de-assert");
 
@@ -93,14 +107,8 @@ void cxd56_spi3select(struct spi_dev_s *dev, uint32_t devid,
 
   cxd56_spi_clock_gate_disable(3);
 
-  if (selected)
-    {
-      putreg32(0, CXD56_SPI3_CS);
-    }
-  else
-    {
-      putreg32(1, CXD56_SPI3_CS);
-    }
+  putreg32(slavetype, CXD56_SPI3_SLAVETYPE);
+  putreg32(selected ? 0 : 1, CXD56_SPI3_CS);
 
   /* Enable clock gating (clock disable) */
 
@@ -109,7 +117,12 @@ void cxd56_spi3select(struct spi_dev_s *dev, uint32_t devid,
 
 uint8_t cxd56_spi3status(struct spi_dev_s *dev, uint32_t devid)
 {
-  return 0;
+  uint8_t ret = 0;
+
+#  if defined(CONFIG_CXD56_SPISD) && (CONFIG_CXD56_SPISD_SPI_CH == 3)
+  ret = board_spisd_status(dev, devid);
+#  endif
+  return ret;
 }
 #endif
 
