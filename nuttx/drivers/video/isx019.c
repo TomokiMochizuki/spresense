@@ -1083,7 +1083,7 @@ static bool isx019_is_available(FAR struct imgsensor_s *sensor)
   for (int i = 0; i < POWER_CHECK_RETRY; i++)
     {
       nxsig_usleep(POWER_CHECK_TIME);
-      
+
       if (confirm_power_on(sensor) == OK)
         {
           break;
@@ -1156,7 +1156,7 @@ static int isx019_init(FAR struct imgsensor_s *sensor)
   for (int i = 0; i < POWER_CHECK_RETRY; i++)
     {
       nxsig_usleep(POWER_CHECK_TIME);
-      
+
       if (confirm_power_on(sensor) == OK)
         {
           break;
@@ -3210,9 +3210,9 @@ static int get_3aparameter(FAR isx019_dev_t *priv,
     }
 
   isx019_i2c_read(priv,
-    CAT_AWBSOUT, CONT_R,     &val->p_u8[OFFSET_3APARAMETER_AWB_R], 2);
+    CAT_AUTOCOM, CONT_R,     &val->p_u8[OFFSET_3APARAMETER_AWB_R], 2);
   isx019_i2c_read(priv,
-    CAT_AWBSOUT, CONT_B,     &val->p_u8[OFFSET_3APARAMETER_AWB_B], 2);
+    CAT_AUTOCOM, CONT_B,     &val->p_u8[OFFSET_3APARAMETER_AWB_B], 2);
   isx019_i2c_read(priv,
     CAT_AESOUT,  SHT_TIME,   &val->p_u8[OFFSET_3APARAMETER_AE_SHTTIME], 4);
   isx019_i2c_read(priv,
